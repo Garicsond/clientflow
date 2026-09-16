@@ -1,6 +1,19 @@
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "./db";
 
+export function shouldSeedSampleData() {
+  if (process.env.ALLOW_SEED === "true") return true;
+  if (process.env.ALLOW_SEED === "false") return false;
+  if (process.env.NODE_ENV === "production") return false;
+  const url = process.env.DATABASE_URL ?? "";
+  // Hosted URLs are treated as production-like so a local `npm run dev`
+  // pointed at Neon does not insert demo clients unless ALLOW_SEED=true.
+  if (/neon\.tech|amazonaws\.com|supabase\.co|railway\.app|render\.com|vercel-storage/i.test(url)) {
+    return false;
+  }
+  return true;
+}
+
 export async function seedIfEmpty(db: PrismaClient = prisma) {
   const existing = await db.client.count();
   if (existing > 0) return { seeded: false };

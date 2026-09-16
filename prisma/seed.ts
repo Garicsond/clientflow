@@ -1,10 +1,23 @@
-import { seedIfEmpty } from "../src/lib/seed";
+import { seedIfEmpty, shouldSeedSampleData } from "../src/lib/seed";
 import { prisma } from "../src/lib/db";
 
-seedIfEmpty()
-  .then((result) => {
-    console.log(result.seeded ? "Seeded sample data." : "Database already has data; skipped seed.");
-  })
+async function main() {
+  if (!shouldSeedSampleData()) {
+    console.log(
+      "Skipping seed. Hosted/production databases stay empty unless you set ALLOW_SEED=true.",
+    );
+    return;
+  }
+
+  const result = await seedIfEmpty();
+  console.log(
+    result.seeded
+      ? "Seeded sample data."
+      : "Database already has data; skipped seed.",
+  );
+}
+
+main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
