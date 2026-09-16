@@ -20,7 +20,7 @@ export function StartWorkflowForm({
   }
 
   return (
-    <form action={startWorkflow} className="flex gap-2">
+    <form action={startWorkflow} className="flex flex-col gap-2 sm:flex-row">
       <input type="hidden" name="clientId" value={clientId} />
       <Select name="templateId" defaultValue={templates[0]!.id} className="flex-1">
         {templates.map((template) => (

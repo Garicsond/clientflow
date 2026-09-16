@@ -30,9 +30,9 @@ export default async function ClientsPage({
 
   if (q) {
     where.OR = [
-      { name: { contains: q } },
-      { company: { contains: q } },
-      { email: { contains: q } },
+      { name: { contains: q, mode: "insensitive" } },
+      { company: { contains: q, mode: "insensitive" } },
+      { email: { contains: q, mode: "insensitive" } },
     ];
   }
 
@@ -58,7 +58,7 @@ export default async function ClientsPage({
       />
 
       <form className="mb-6 flex flex-wrap items-end gap-3">
-        <div className="min-w-56 flex-1">
+        <div className="min-w-0 flex-1 sm:min-w-56">
           <Input name="q" defaultValue={q} placeholder="Search name, company, email" />
         </div>
         <Select name="status" defaultValue={status} className="w-40">
@@ -96,7 +96,8 @@ export default async function ClientsPage({
         />
       ) : (
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-stone-50/80 text-left text-xs uppercase tracking-wider text-stone-500">
               <tr>
                 <th className="px-5 py-3 font-medium">Client</th>
@@ -136,6 +137,7 @@ export default async function ClientsPage({
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
     </div>

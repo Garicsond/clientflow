@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
-import { AppShell } from "@/components/app-shell";
-import { seedIfEmpty } from "@/lib/seed";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,23 +23,25 @@ export const metadata: Metadata = {
   description: "Client CRM and workflow management for small teams.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#1b2430",
+};
+
 export const dynamic = "force-dynamic";
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  await seedIfEmpty();
-
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans">
-        <AppShell>{children}</AppShell>
-      </body>
+      <body className="min-h-full font-sans">{children}</body>
     </html>
   );
 }

@@ -74,7 +74,8 @@ export default async function WorkflowsPage({
         />
       ) : (
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[40rem] text-sm">
             <thead className="bg-stone-50/80 text-left text-xs uppercase tracking-wider text-stone-500">
               <tr>
                 <th className="px-5 py-3 font-medium">Workflow</th>
@@ -113,6 +114,7 @@ export default async function WorkflowsPage({
               })}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
     </div>
