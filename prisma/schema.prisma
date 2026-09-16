@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ClientStatus {
+  LEAD
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum WorkflowInstanceStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum StepStatus {
+  TODO
+  DOING
+  DONE
+}
+
+model Client {
+  id        String       @id @default(cuid())
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  status    ClientStatus @default(LEAD)
+  tags      String       @default("")
+  notes     String?
+  archived  Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  activities Activity[]
+  workflows  WorkflowInstance[]
+
+  @@index([status])
+  @@index([archived])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([clientId, createdAt])
+}
+
+model WorkflowTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps     WorkflowTemplateStep[]
+  instances WorkflowInstance[]
+}
+
+model WorkflowTemplateStep {
+  id           String           @id @default(cuid())
+  templateId   String
+  template     WorkflowTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  title        String
+  instructions String?
+  order        Int
+
+  @@index([templateId, order])
+}
+
+model WorkflowInstance {
+  id          String                   @id @default(cuid())
+  templateId  String
+  template    WorkflowTemplate         @relation(fields: [templateId], references: [id])
+  clientId    String
+  client      Client                   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  status      WorkflowInstanceStatus   @default(ACTIVE)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  completedAt DateTime?
+
+  steps WorkflowInstanceStep[]
+
+  @@index([status])
+  @@index([clientId])
+}
+
+model WorkflowInstanceStep {
+  id           String           @id @default(cuid())
+  instanceId   String
+  instance     WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  title        String
+  instructions String?
+  order        Int
+  status       StepStatus       @default(TODO)
+  dueDate      DateTime?
+  notes        String?
+  completedAt  DateTime?
+
+  @@index([instanceId, order])
+}
