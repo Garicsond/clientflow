@@ -61,10 +61,13 @@ export async function startWorkflow(formData: FormData) {
   redirect(`/workflows/${instance.id}`);
 }
 
-export async function updateStepStatus(stepId: string, status: StepStatusValue) {
-  if (!STEP_STATUSES.includes(status)) {
-    throw new Error("Invalid step status.");
-  }
+export async function updateStep(stepId: string, formData: FormData) {
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+  const dueDate = parseDateInput(String(formData.get("dueDate") ?? ""));
+  const statusRaw = String(formData.get("status") ?? "");
+  const status = STEP_STATUSES.includes(statusRaw as StepStatusValue)
+    ? (statusRaw as StepStatusValue)
+    : null;
 
   const step = await prisma.workflowInstanceStep.findUnique({
     where: { id: stepId },
@@ -84,8 +87,11 @@ export async function updateStepStatus(stepId: string, status: StepStatusValue) 
   await prisma.workflowInstanceStep.update({
     where: { id: stepId },
     data: {
-      status,
-      completedAt: status === "DONE" ? now : null,
+      notes,
+      dueDate,
+      ...(status
+        ? { status, completedAt: status === "DONE" ? now : null }
+        : {}),
     },
   });
 
@@ -101,48 +107,37 @@ export async function updateStepStatus(stepId: string, status: StepStatusValue) 
     }
   }
 
-  const steps = await prisma.workflowInstanceStep.findMany({
-    where: { instanceId: step.instanceId },
-  });
-  const allDone = steps.every((item) => item.status === "DONE");
+  if (status) {
+    const steps = await prisma.workflowInstanceStep.findMany({
+      where: { instanceId: step.instanceId },
+    });
+    const allDone = steps.every((item) => item.status === "DONE");
 
-  if (allDone && step.instance.status !== "COMPLETED") {
-    await prisma.workflowInstance.update({
-      where: { id: step.instanceId },
-      data: { status: "COMPLETED", completedAt: now },
-    });
-    await prisma.activity.create({
-      data: {
-        clientId: step.instance.clientId,
-        message: `Completed workflow “${step.instance.template.name}”`,
-      },
-    });
-  } else if (!allDone && step.instance.status === "COMPLETED") {
-    await prisma.workflowInstance.update({
-      where: { id: step.instanceId },
-      data: { status: "ACTIVE", completedAt: null },
-    });
-  } else if (status === "DONE") {
-    await prisma.activity.create({
-      data: {
-        clientId: step.instance.clientId,
-        message: `Marked “${step.title}” done in “${step.instance.template.name}”`,
-      },
-    });
+    if (allDone && step.instance.status !== "COMPLETED") {
+      await prisma.workflowInstance.update({
+        where: { id: step.instanceId },
+        data: { status: "COMPLETED", completedAt: now },
+      });
+      await prisma.activity.create({
+        data: {
+          clientId: step.instance.clientId,
+          message: `Completed workflow “${step.instance.template.name}”`,
+        },
+      });
+    } else if (!allDone && step.instance.status === "COMPLETED") {
+      await prisma.workflowInstance.update({
+        where: { id: step.instanceId },
+        data: { status: "ACTIVE", completedAt: null },
+      });
+    } else if (status === "DONE") {
+      await prisma.activity.create({
+        data: {
+          clientId: step.instance.clientId,
+          message: `Marked “${step.title}” done in “${step.instance.template.name}”`,
+        },
+      });
+    }
   }
-
-  revalidateWorkflow(step.instance.clientId, step.instanceId);
-}
-
-export async function updateStepDetails(stepId: string, formData: FormData) {
-  const notes = String(formData.get("notes") ?? "").trim() || null;
-  const dueDate = parseDateInput(String(formData.get("dueDate") ?? ""));
-
-  const step = await prisma.workflowInstanceStep.update({
-    where: { id: stepId },
-    data: { notes, dueDate },
-    include: { instance: true },
-  });
 
   revalidateWorkflow(step.instance.clientId, step.instanceId);
 }

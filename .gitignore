@@ -42,3 +42,7 @@ next-env.d.ts
 *.db
 *.db-journal
 /prisma/dev.db
+
+# next generated agent guides
+AGENTS.md
+CLAUDE.md

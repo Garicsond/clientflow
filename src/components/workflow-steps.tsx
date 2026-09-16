@@ -4,8 +4,7 @@ import {
   cancelWorkflow,
   completeWorkflow,
   reopenWorkflow,
-  updateStepDetails,
-  updateStepStatus,
+  updateStep,
 } from "@/app/actions/workflows";
 import { Button } from "@/components/ui/button";
 import { StepStatusBadge } from "@/components/ui/badge";
@@ -60,14 +59,14 @@ export function WorkflowSteps({
               </div>
               <StepStatusBadge status={step.status} />
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {STEP_STATUSES.map((status) => (
-                <form
-                  key={status}
-                  action={updateStepStatus.bind(null, step.id, status)}
-                >
+            <form action={updateStep.bind(null, step.id)} className="mt-4 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {STEP_STATUSES.map((status) => (
                   <Button
+                    key={status}
                     type="submit"
+                    name="status"
+                    value={status}
                     size="sm"
                     variant={step.status === status ? "ink" : "secondary"}
                     disabled={step.status === status}
@@ -78,28 +77,25 @@ export function WorkflowSteps({
                         ? "Doing"
                         : "Done"}
                   </Button>
-                </form>
-              ))}
-            </div>
-            <form
-              action={updateStepDetails.bind(null, step.id)}
-              className="mt-4 grid gap-3 sm:grid-cols-[180px_1fr_auto]"
-            >
-              <Input
-                type="date"
-                name="dueDate"
-                defaultValue={toDateInput(step.dueDate)}
-                aria-label="Due date"
-              />
-              <Textarea
-                name="notes"
-                defaultValue={step.notes ?? ""}
-                placeholder="Step notes…"
-                className="min-h-10 py-2"
-              />
-              <Button type="submit" variant="secondary" size="sm" className="self-start">
-                Save notes
-              </Button>
+                ))}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-[180px_1fr_auto]">
+                <Input
+                  type="date"
+                  name="dueDate"
+                  defaultValue={toDateInput(step.dueDate)}
+                  aria-label="Due date"
+                />
+                <Textarea
+                  name="notes"
+                  defaultValue={step.notes ?? ""}
+                  placeholder="Step notes…"
+                  className="min-h-10 py-2"
+                />
+                <Button type="submit" variant="secondary" size="sm" className="self-start">
+                  Save notes
+                </Button>
+              </div>
             </form>
           </li>
         ))}
